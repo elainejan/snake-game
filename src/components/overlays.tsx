@@ -9,37 +9,28 @@ import {
   SnakeMark,
 } from "./icons";
 
-/* Overlays sit on the (always dark) board, so they use fixed dark tones
-   to stay legible in both page themes. */
-
 function Shell({ children, label }: { children: ReactNode; label: string }) {
   return (
     <div
       role="dialog"
       aria-label={label}
-      className="anim-fade absolute inset-0 z-10 flex items-center justify-center rounded-[18px] bg-[rgba(5,11,8,0.78)] p-4 backdrop-blur-[3px]"
+      className="ov-scrim anim-fade absolute inset-0 z-10 flex items-center justify-center rounded-[18px] p-4 backdrop-blur-[3px]"
     >
-      <div className="anim-pop w-full max-w-sm rounded-2xl border border-[rgba(148,226,179,0.16)] bg-[#0f1d15] p-6 text-center text-[#e9f5ee] shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] sm:p-7">
+      <div className="ov-card anim-pop w-full max-w-sm rounded-2xl p-6 text-center sm:p-7">
         {children}
       </div>
     </div>
   );
 }
 
-const label = "block text-[10px] font-bold uppercase tracking-[0.22em] text-[#8fae9c]";
+const label = "ov-mute block text-[10px] font-bold uppercase tracking-[0.22em]";
 
-function GhostButton({
-  onClick,
-  children,
-}: {
-  onClick: () => void;
-  children: ReactNode;
-}) {
+function GhostButton({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[rgba(148,226,179,0.28)] font-semibold text-[#bfe8d2] transition-all duration-150 hover:border-[rgba(148,226,179,0.5)] hover:bg-[rgba(148,226,179,0.08)] active:scale-[0.97]"
+      className="ov-ghost inline-flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl font-semibold transition-all duration-150 active:scale-[0.97]"
     >
       {children}
     </button>
@@ -51,7 +42,7 @@ function PlayButton({ onClick, children }: { onClick: () => void; children: Reac
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-[#6fe3a5] font-display text-sm font-bold tracking-wide text-[#072517] shadow-[0_14px_30px_-10px_rgba(20,120,70,0.65),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-150 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97]"
+      className="font-display inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2.5 rounded-xl bg-mint text-sm font-bold tracking-wide text-mintink shadow-[0_14px_30px_-10px_rgba(20,120,70,0.55),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-150 hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.97]"
     >
       {children}
     </button>
@@ -73,26 +64,20 @@ export function ReadyOverlay({
 }) {
   return (
     <Shell label="Start screen — choose difficulty and start the game">
-      <SnakeMark size={44} className="logo-mark mx-auto anim-drift" />
-      <h2 className="font-display mt-3 text-2xl font-extrabold tracking-[0.14em] text-[#e9f5ee]">
+      <SnakeMark size={44} className="logo-mark anim-drift mx-auto" />
+      <h2 className="font-display mt-3 text-2xl font-extrabold tracking-[0.14em]">
         SNAKE
       </h2>
-      <p className="mt-1.5 text-sm text-[#8fae9c]">
-        Classic gameplay. Modern feel.
-      </p>
+      <p className="ov-mute mt-1.5 text-sm">Classic gameplay. Modern feel.</p>
 
       <div className="mt-5">
         <span className={label}>Choose difficulty</span>
         <div className="mt-2">
-          <DifficultyPicker
-            value={difficulty}
-            onChange={onDifficulty}
-            dark
-          />
+          <DifficultyPicker value={difficulty} onChange={onDifficulty} dark />
         </div>
-        <p className="mt-2 text-xs text-[#8fae9c]">
+        <p className="ov-mute mt-2 text-xs">
           {DIFFS[difficulty].desc} · Best on {DIFFS[difficulty].label.toLowerCase()}:{" "}
-          <span className="font-semibold text-[#f2c86f]">{pad3(bests[difficulty])}</span>
+          <span className="ov-gold font-semibold">{pad3(bests[difficulty])}</span>
         </p>
       </div>
 
@@ -103,7 +88,7 @@ export function ReadyOverlay({
         </PlayButton>
       </div>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-[#6d8b7b]">
+      <p className="ov-dim mt-4 text-[11px] leading-relaxed">
         Arrows / WASD or swipe to steer · Space pauses · R restarts
       </p>
     </Shell>
@@ -121,13 +106,11 @@ export function PauseOverlay({
 }) {
   return (
     <Shell label="Game paused">
-      <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[rgba(148,226,179,0.25)] bg-[rgba(148,226,179,0.08)] text-[#6fe3a5]">
+      <span className="ov-badge mx-auto flex h-12 w-12 items-center justify-center rounded-full">
         <IconPause size={20} />
       </span>
-      <h2 className="font-display mt-4 text-xl font-bold text-[#e9f5ee]">
-        Game Paused
-      </h2>
-      <p className="mt-1.5 text-sm text-[#8fae9c]">
+      <h2 className="font-display mt-4 text-xl font-bold">Game Paused</h2>
+      <p className="ov-mute mt-1.5 text-sm">
         Take a break — your progress is saved.
       </p>
       <div className="mt-5 space-y-2.5">
@@ -140,7 +123,7 @@ export function PauseOverlay({
           Restart
         </GhostButton>
       </div>
-      <p className="mt-4 text-[11px] text-[#6d8b7b]">Press Space to resume</p>
+      <p className="ov-dim mt-4 text-[11px]">Press Space to resume</p>
     </Shell>
   );
 }
@@ -167,21 +150,19 @@ export function OverOverlay({
   return (
     <Shell label={`Game over. Score ${score}.`}>
       {newBest && (
-        <span className="anim-best mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full border border-[rgba(242,200,111,0.5)] bg-[rgba(242,200,111,0.12)] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#f2c86f]">
+        <span className="ov-pill-gold anim-best mx-auto mb-4 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em]">
           <IconTrophy size={13} />
           New High Score
         </span>
       )}
-      <h2 className="font-display text-2xl font-extrabold text-[#e9f5ee]">
-        Game Over
-      </h2>
+      <h2 className="font-display text-2xl font-extrabold">Game Over</h2>
 
       <div className="mt-5 flex items-end justify-center gap-8">
         <div>
           <span className={label}>Score</span>
           <p
             className={`font-display mt-1 text-[44px] font-extrabold leading-none ${
-              newBest ? "text-[#f2c86f]" : "text-[#96f3c0]"
+              newBest ? "ov-gold" : "ov-mint"
             }`}
           >
             {pad3(score)}
@@ -189,19 +170,19 @@ export function OverOverlay({
         </div>
         <div className="pb-1">
           <span className={label}>Best</span>
-          <p className="font-display mt-1 flex items-center gap-1.5 text-xl font-bold leading-none text-[#bfe8d2]">
-            <IconTrophy size={16} className="text-[#f2c86f]" />
+          <p className="font-display mt-1 flex items-center gap-1.5 text-xl font-bold leading-none">
+            <IconTrophy size={16} className="ov-gold" />
             {pad3(best)}
           </p>
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-[#8fae9c]">
-        <span className="rounded-md border border-[rgba(148,226,179,0.18)] bg-[rgba(148,226,179,0.06)] px-2.5 py-1">
-          Length <strong className="text-[#e9f5ee]">{length}</strong>
+      <div className="ov-mute mt-4 flex items-center justify-center gap-2 text-[11px]">
+        <span className="ov-chip rounded-md px-2.5 py-1">
+          Length <strong>{length}</strong>
         </span>
-        <span className="rounded-md border border-[rgba(148,226,179,0.18)] bg-[rgba(148,226,179,0.06)] px-2.5 py-1">
-          Food <strong className="text-[#e9f5ee]">{foods}</strong>
+        <span className="ov-chip rounded-md px-2.5 py-1">
+          Food <strong>{foods}</strong>
         </span>
       </div>
 

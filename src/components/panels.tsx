@@ -51,12 +51,10 @@ export function SpeedDots({
           className={`w-[3px] rounded-full ${h} ${
             i < level
               ? active
-                ? dark
-                  ? "bg-[#072517]/70"
-                  : "bg-mintink/80"
+                ? "bg-mintink/80"
                 : "bg-mint"
               : dark
-                ? "bg-[#2c4536]"
+                ? "pk-dot"
                 : "bg-panel2 border border-line"
           }`}
         />
@@ -80,10 +78,8 @@ export function DifficultyPicker({
     <div
       role="radiogroup"
       aria-label="Difficulty"
-      className={`grid grid-cols-3 gap-1 rounded-[13px] p-1 ${
-        dark
-          ? "border border-[rgba(148,226,179,0.16)] bg-[rgba(148,226,179,0.05)]"
-          : "border border-line bg-panel2"
+      className={`grid grid-cols-3 gap-1 rounded-[13px] border p-1 ${
+        dark ? "pkc" : "border-line bg-panel2"
       }`}
     >
       {DIFF_ORDER.map((d) => {
@@ -99,11 +95,9 @@ export function DifficultyPicker({
             className={[
               "flex cursor-pointer flex-col items-center gap-1 rounded-[10px] px-2 py-2.5 transition-all duration-150",
               active
-                ? dark
-                  ? "bg-[#6fe3a5] text-[#072517] shadow-md shadow-black/25"
-                  : "bg-mint text-mintink shadow-md shadow-black/15"
+                ? "bg-mint text-mintink shadow-md shadow-black/15"
                 : dark
-                  ? "text-[#8fae9c] hover:bg-[rgba(148,226,179,0.07)] hover:text-[#e9f5ee]"
+                  ? "pkb"
                   : "text-mute hover:bg-panel hover:text-ink",
             ].join(" ")}
           >

@@ -208,7 +208,7 @@ export default function App() {
               <HudBar ui={ui} onTogglePause={togglePauseHud} onRestart={game.start} />
 
               <div
-                className="rounded-[24px] border border-line bg-panel p-2 sm:p-2.5"
+                className="rounded-[24px] border border-line bg-[var(--frame)] p-2 sm:p-2.5"
                 style={{ boxShadow: "var(--shadow-board)" }}
               >
                 <div

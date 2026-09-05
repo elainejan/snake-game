@@ -1,16 +1,6 @@
-import {
-  GRID,
-  intervalOf,
-  type Dir,
-  type World,
-  type Particle,
-  type FloatText,
-} from "./core";
+import { GRID, intervalOf, type Dir, type Point, type World } from "./core";
 
-const TAU = Math.PI * 2;
-const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
-
-const DIRV: Record<Dir, { x: number; y: number }> = {
+const DIRS: Record<Dir, Point> = {
   up: { x: 0, y: -1 },
   down: { x: 0, y: 1 },
   left: { x: -1, y: 0 },
@@ -21,346 +11,276 @@ export interface DrawOpts {
   reduced: boolean;
 }
 
-function rr(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number
-): void {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
+/** Board colors resolve from CSS custom properties each frame, so the
+ *  arena re-themes instantly when the page theme flips. */
+interface Theme {
+  bg: string;
+  grid: string;
+  shade: string;
+  mint: string;
+  mintDeep: string;
+  coral: string;
+  appleGlow: string;
 }
+
+const themeOf = (el: HTMLCanvasElement): Theme => {
+  const cs = getComputedStyle(el);
+  const v = (n: string) => cs.getPropertyValue(n).trim();
+  return {
+    bg: v("--board-bg") || "#101d16",
+    grid: v("--grid-line") || "rgba(148,226,179,0.05)",
+    shade: v("--board-shade") || "rgba(0,0,0,0.16)",
+    mint: v("--mint") || "#6fe3a5",
+    mintDeep: v("--mint-deep") || "#2e8f60",
+    coral: v("--coral") || "#ff7a5c",
+    appleGlow: v("--apple-glow") || "rgba(255,122,92,0.22)",
+  };
+};
 
 /* ---------------- fx helpers (mutate world) ---------------- */
 
-const cellOf = (w: World) => (w.size ? w.size / GRID : 20);
-const px = (w: World, cell: number) => (cell + 0.5) * cellOf(w);
-
-export function spawnBurst(
+export const spawnBurst = (
   w: World,
-  cx: number,
-  cy: number,
+  x: number,
+  y: number,
   colors: string[],
-  n: number,
-  power = 1
-): void {
-  for (let i = 0; i < n; i++) {
-    const a = Math.random() * TAU;
-    const sp = (0.8 + Math.random() * 2.1) * power;
+  count: number,
+  speed = 1
+): void => {
+  const cell = w.size ? w.size / GRID : 20;
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = cell * (2.2 + Math.random() * 4.6) * speed;
     w.particles.push({
-      x: cx,
-      y: cy,
+      x,
+      y,
       vx: Math.cos(a) * sp,
-      vy: Math.sin(a) * sp - 0.6,
-      life: 420 + Math.random() * 260,
-      max: 680,
-      r: 1.6 + Math.random() * 2.6,
+      vy: Math.sin(a) * sp,
+      life: 380 + Math.random() * 420,
+      max: 800,
+      r: cell * (0.06 + Math.random() * 0.11),
       color: colors[i % colors.length],
     });
   }
-}
+};
 
-export function spawnFloat(w: World, cellX: number, cellY: number, text: string): void {
-  w.floats.push({ x: px(w, cellX), y: px(w, cellY), text, age: 0, max: 760 });
-}
+export const spawnFloat = (w: World, gx: number, gy: number, text: string): void => {
+  w.floats.push({ x: gx, y: gy, text, age: 0, max: 800 });
+};
 
-export function stepFx(w: World, dt: number): void {
-  w.shake = Math.max(0, w.shake - dt);
-  w.flash = Math.max(0, w.flash - dt * 1.15);
-  const f = dt / 16.6;
-  for (let i = w.particles.length - 1; i >= 0; i--) {
-    const p: Particle = w.particles[i];
+/** Advances particles, floats, shake and flash. dt is in ms. */
+export const stepFx = (w: World, dt: number): void => {
+  const s = Math.min(50, dt) / 1000;
+  for (const p of w.particles) {
+    p.x += p.vx * s;
+    p.y += p.vy * s;
+    p.vx *= 1 - 2.4 * s;
+    p.vy *= 1 - 2.4 * s;
     p.life -= dt;
-    if (p.life <= 0) {
-      w.particles.splice(i, 1);
-      continue;
-    }
-    p.x += p.vx * f;
-    p.y += p.vy * f;
-    p.vx *= 0.93;
-    p.vy = p.vy * 0.93 + 0.045 * f;
   }
-  for (let i = w.floats.length - 1; i >= 0; i--) {
-    const t: FloatText = w.floats[i];
-    t.age += dt;
-    if (t.age >= t.max) w.floats.splice(i, 1);
-  }
-}
+  w.particles = w.particles.filter((p) => p.life > 0);
+  for (const f of w.floats) f.age += dt;
+  w.floats = w.floats.filter((f) => f.age < f.max);
+  w.shake = Math.max(0, w.shake - dt);
+  w.flash = Math.max(0, w.flash - dt);
+};
 
 /* ---------------- draw ---------------- */
 
-export function draw(
+export const draw = (
   ctx: CanvasRenderingContext2D,
   w: World,
   now: number,
   opts: DrawOpts
-): void {
-  const size = w.size;
-  if (!size) return;
-  const cell = size / GRID;
+): void => {
+  const S = w.size;
+  if (!S) return;
+  const reduced = opts.reduced;
+  const cell = S / GRID;
+  const cx = (p: Point) => p.x * cell + cell / 2;
+  const cy = (p: Point) => p.y * cell + cell / 2;
+  const th = themeOf(ctx.canvas);
+  const ft = now / 1000;
 
   ctx.setTransform(w.dpr, 0, 0, w.dpr, 0, 0);
-  ctx.clearRect(0, 0, size, size);
-  ctx.save();
-
-  if (w.shake > 0 && !opts.reduced) {
-    const m = (w.shake / 360) * 4;
-    ctx.translate((Math.random() - 0.5) * 2 * m, (Math.random() - 0.5) * 2 * m);
+  if (w.shake > 0 && !reduced) {
+    const k = w.shake / 360;
+    const m = k * k * 8;
+    ctx.translate((Math.random() - 0.5) * m, (Math.random() - 0.5) * m);
   }
 
-  // board base
-  rr(ctx, 0, 0, size, size, 18);
-  const bg = ctx.createLinearGradient(0, 0, 0, size);
-  bg.addColorStop(0, "#122119");
-  bg.addColorStop(1, "#0a150f");
-  ctx.fillStyle = bg;
-  ctx.fill();
+  /* board surface */
+  ctx.fillStyle = th.bg;
+  ctx.fillRect(0, 0, S, S);
 
-  ctx.save();
-  ctx.clip();
-
-  // subtle checkerboard
-  ctx.fillStyle = "rgba(226,244,234,0.02)";
-  for (let y = 0; y < GRID; y++)
-    for (let x = y % 2; x < GRID; x += 2)
-      ctx.fillRect(x * cell, y * cell, cell + 0.5, cell + 0.5);
-
-  // top sheen
-  const sheen = ctx.createLinearGradient(0, 0, 0, cell * 2.4);
-  sheen.addColorStop(0, "rgba(255,255,255,0.035)");
-  sheen.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = sheen;
-  ctx.fillRect(0, 0, size, cell * 2.4);
-
-  // vignette
-  const vg = ctx.createRadialGradient(
-    size / 2, size / 2, size * 0.32,
-    size / 2, size / 2, size * 0.8
-  );
-  vg.addColorStop(0, "rgba(0,0,0,0)");
-  vg.addColorStop(1, "rgba(2,8,5,0.45)");
-  ctx.fillStyle = vg;
-  ctx.fillRect(0, 0, size, size);
-
-  drawFood(ctx, w, cell, now, opts);
-  drawSnake(ctx, w, cell, now, opts);
-  drawParticles(ctx, w);
-  drawFloats(ctx, w, cell);
-
-  ctx.restore();
-
-  // hairline inner border
-  rr(ctx, 0.5, 0.5, size - 1, size - 1, 18);
-  ctx.strokeStyle = "rgba(148,226,179,0.13)";
+  ctx.strokeStyle = th.grid;
   ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 1; i < GRID; i++) {
+    ctx.moveTo(i * cell + 0.5, 0);
+    ctx.lineTo(i * cell + 0.5, S);
+    ctx.moveTo(0, i * cell + 0.5);
+    ctx.lineTo(S, i * cell + 0.5);
+  }
   ctx.stroke();
 
-  ctx.restore();
-}
+  /* ---------- food ---------- */
+  const pulse = reduced ? 1 : 1 + Math.sin(ft * 3.4) * 0.07;
+  const fx = cx(w.food);
+  const fy = cy(w.food) + (reduced ? 0 : Math.sin(ft * 2.2) * cell * 0.05);
+  const R = cell * 0.31 * pulse;
 
-function drawFood(
-  ctx: CanvasRenderingContext2D,
-  w: World,
-  cell: number,
-  now: number,
-  opts: DrawOpts
-): void {
-  const fx = (w.food.x + 0.5) * cell;
-  const fy = (w.food.y + 0.5) * cell;
-  const pulse = opts.reduced ? 0 : Math.sin(now / 260);
-  const r = cell * 0.3 * (1 + 0.05 * pulse);
-
-  // glow
-  const glowR = cell * (1.05 + 0.09 * pulse);
-  const gg = ctx.createRadialGradient(fx, fy, r * 0.2, fx, fy, glowR);
-  gg.addColorStop(0, "rgba(255,110,80,0.3)");
-  gg.addColorStop(1, "rgba(255,110,80,0)");
-  ctx.fillStyle = gg;
+  const glow = ctx.createRadialGradient(fx, fy, R * 0.2, fx, fy, R * 3);
+  glow.addColorStop(0, th.appleGlow);
+  glow.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(fx, fy, glowR, 0, TAU);
+  ctx.arc(fx, fy, R * 3, 0, Math.PI * 2);
   ctx.fill();
 
-  // body
-  const body = ctx.createRadialGradient(fx - r * 0.35, fy - r * 0.4, r * 0.15, fx, fy, r);
-  body.addColorStop(0, "#ff9d80");
-  body.addColorStop(1, "#ee4e2d");
+  ctx.fillStyle = th.coral;
   ctx.beginPath();
-  ctx.arc(fx, fy, r, 0, TAU);
-  ctx.fillStyle = body;
+  ctx.arc(fx, fy, R, 0, Math.PI * 2);
   ctx.fill();
 
-  // highlight
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.beginPath();
-  ctx.arc(fx - r * 0.32, fy - r * 0.34, r * 0.26, 0, TAU);
-  ctx.fillStyle = "rgba(255,255,255,0.5)";
+  ctx.arc(fx - R * 0.34, fy - R * 0.36, R * 0.22, 0, Math.PI * 2);
   ctx.fill();
 
-  // stem + leaf
-  ctx.strokeStyle = "#7a4a2f";
-  ctx.lineWidth = Math.max(1, cell * 0.05);
-  ctx.lineCap = "round";
+  ctx.fillStyle = th.mint;
   ctx.beginPath();
-  ctx.moveTo(fx, fy - r * 0.9);
-  ctx.lineTo(fx + r * 0.12, fy - r - cell * 0.09);
+  ctx.ellipse(fx + R * 0.34, fy - R * 1.22, R * 0.5, R * 0.26, -0.7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = th.mintDeep;
+  ctx.lineWidth = Math.max(1.5, cell * 0.07);
+  ctx.beginPath();
+  ctx.moveTo(fx, fy - R * 0.9);
+  ctx.lineTo(fx + R * 0.06, fy - R * 1.35);
   ctx.stroke();
 
-  ctx.save();
-  ctx.translate(fx + r * 0.3, fy - r - cell * 0.06);
-  ctx.rotate(-0.55);
-  ctx.beginPath();
-  ctx.ellipse(0, 0, cell * 0.13, cell * 0.055, 0, 0, TAU);
-  ctx.fillStyle = "#3fbf7f";
-  ctx.fill();
-  ctx.restore();
-}
+  /* ---------- snake ---------- */
+  let alpha = 0;
+  if (w.phase === "playing") {
+    alpha = Math.max(0, Math.min(1, w.acc / intervalOf(w)));
+  } else if (w.phase === "over") {
+    alpha = Math.max(0, Math.min(1, (now - w.deadAt) / 130));
+  }
 
-function drawSnake(
-  ctx: CanvasRenderingContext2D,
-  w: World,
-  cell: number,
-  now: number,
-  opts: DrawOpts
-): void {
-  if (!w.segments.length) return;
-
-  const t =
-    w.phase === "playing" ? clamp01(w.acc / intervalOf(w)) : 1;
-
-  const pts = w.segments.map((s, i) => {
-    const p = w.prev[Math.min(i, w.prev.length - 1)] ?? s;
+  const pts = w.segments.map((seg, i) => {
+    const p = w.prev[i] ?? seg;
+    const raw = {
+      x: p.x + (seg.x - p.x) * alpha,
+      y: p.y + (seg.y - p.y) * alpha,
+    };
+    const lead =
+      i === 0 && (w.phase === "paused" || w.phase === "ready") ? DIRS[w.dir] : { x: 0, y: 0 };
     return {
-      x: (p.x + (s.x - p.x) * t + 0.5) * cell,
-      y: (p.y + (s.y - p.y) * t + 0.5) * cell,
+      x: (raw.x + lead.x * 0.32) * cell + cell / 2,
+      y: (raw.y + lead.y * 0.32) * cell + cell / 2,
     };
   });
 
-  const dead = w.phase === "over";
-  const fade = dead
-    ? 0.42 + 0.58 * clamp01(1 - (now - w.deadAt) / 700)
-    : 1;
+  const g = ctx.createLinearGradient(
+    pts[0].x,
+    pts[0].y,
+    pts[pts.length - 1].x,
+    pts[pts.length - 1].y
+  );
+  g.addColorStop(0, th.mint);
+  g.addColorStop(1, th.mintDeep);
 
-  ctx.save();
-  ctx.globalAlpha = fade;
-  ctx.lineJoin = "round";
   ctx.lineCap = "round";
+  ctx.lineJoin = "round";
 
-  const trace = () => {
-    ctx.beginPath();
-    ctx.moveTo(pts[0].x, pts[0].y);
-    if (pts.length === 1) ctx.lineTo(pts[0].x + 0.01, pts[0].y);
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  };
-
-  // under-stroke (dark rim)
-  trace();
-  ctx.strokeStyle = dead ? "#28463a" : "#0d3d27";
-  ctx.lineWidth = cell * 0.72;
-  ctx.stroke();
-
-  // lit body, gradient head → tail
-  const tail = pts[pts.length - 1];
-  const g = ctx.createLinearGradient(pts[0].x, pts[0].y, tail.x, tail.y);
-  if (dead) {
-    g.addColorStop(0, "#84a896");
-    g.addColorStop(1, "#4c6d5c");
-  } else {
-    g.addColorStop(0, "#96f3c0");
-    g.addColorStop(1, "#2ba46a");
-  }
-  trace();
-  ctx.strokeStyle = g;
-  ctx.lineWidth = cell * 0.46;
-  ctx.stroke();
-
-  // head
-  const hp = pts[0];
-  const d = DIRV[w.dir];
-  if (w.flash > 0 && !dead) {
-    ctx.shadowColor = "rgba(150,243,192,0.9)";
-    ctx.shadowBlur = (w.flash / 220) * 22;
-  }
+  /* separation outline */
+  ctx.strokeStyle = "rgba(0,0,0,0.22)";
+  ctx.lineWidth = cell * 0.82;
   ctx.beginPath();
-  ctx.arc(hp.x, hp.y, cell * 0.42, 0, TAU);
-  ctx.fillStyle = dead ? "#9fbca9" : "#c9f8de";
-  ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
 
-  // eyes — orientation cue + blink; crossed out on death
-  const perp = { x: -d.y, y: d.x };
-  const eo = cell * 0.14;
-  const es = cell * 0.175;
-  const er = cell * 0.115;
-  const blink = !opts.reduced && !dead && now % 3800 > 3655;
+  /* body */
+  ctx.strokeStyle = g;
+  ctx.lineWidth = cell * 0.7;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.stroke();
 
-  for (const s of [-1, 1]) {
-    const ex = hp.x + d.x * eo + perp.x * es * s;
-    const ey = hp.y + d.y * eo + perp.y * es * s;
-    if (dead) {
-      ctx.strokeStyle = "#1d3a2d";
-      ctx.lineWidth = Math.max(1, cell * 0.05);
-      const k = er * 0.75;
+  /* head: eyes + gaze */
+  const h = pts[0];
+  const d = DIRS[w.dir];
+  const px = -d.y;
+  const py = d.x;
+  const eyeR = cell * 0.105;
+  const dead = w.phase === "over";
+  const blink = reduced || dead ? 0 : Math.max(0, Math.sin(ft * 0.9) - 0.965) / 0.035;
+
+  for (const sgn of [-1, 1]) {
+    const ex = h.x + d.x * cell * 0.16 + px * sgn * cell * 0.18;
+    const ey = h.y + d.y * cell * 0.16 + py * sgn * cell * 0.18;
+    const er = eyeR * (1 - 0.85 * blink);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(ex, ey, er, 0, Math.PI * 2);
+    ctx.fill();
+    if (!dead && blink < 0.75) {
+      ctx.fillStyle = "#10231a";
+      ctx.beginPath();
+      ctx.arc(ex + d.x * eyeR * 0.42, ey + d.y * eyeR * 0.42, eyeR * 0.52, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (dead) {
+    ctx.strokeStyle = "#10231a";
+    ctx.lineWidth = Math.max(1.4, cell * 0.06);
+    for (const sgn of [-1, 1]) {
+      const ex = h.x + d.x * cell * 0.16 + px * sgn * cell * 0.18;
+      const ey = h.y + d.y * cell * 0.16 + py * sgn * cell * 0.18;
+      const k = eyeR * 0.6;
       ctx.beginPath();
       ctx.moveTo(ex - k, ey - k);
       ctx.lineTo(ex + k, ey + k);
       ctx.moveTo(ex + k, ey - k);
       ctx.lineTo(ex - k, ey + k);
       ctx.stroke();
-    } else if (blink) {
-      ctx.strokeStyle = "#1d3a2d";
-      ctx.lineWidth = Math.max(1, cell * 0.05);
-      ctx.beginPath();
-      ctx.moveTo(ex - perp.x * er, ey - perp.y * er);
-      ctx.lineTo(ex + perp.x * er, ey + perp.y * er);
-      ctx.stroke();
-    } else {
-      ctx.beginPath();
-      ctx.arc(ex, ey, er, 0, TAU);
-      ctx.fillStyle = "#f4fbf7";
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(ex + d.x * cell * 0.04, ey + d.y * cell * 0.04, cell * 0.058, 0, TAU);
-      ctx.fillStyle = "#123123";
-      ctx.fill();
     }
   }
 
-  ctx.restore();
-}
-
-function drawParticles(ctx: CanvasRenderingContext2D, w: World): void {
-  if (!w.particles.length) return;
-  ctx.save();
+  /* ---------- particles ---------- */
   for (const p of w.particles) {
-    const a = clamp01(p.life / p.max);
-    ctx.globalAlpha = a;
+    ctx.globalAlpha = Math.max(0, p.life / p.max);
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, Math.max(0.4, p.r * a), 0, TAU);
+    ctx.arc(p.x, p.y, Math.max(0.5, p.r * (p.life / p.max)), 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.restore();
-}
+  ctx.globalAlpha = 1;
 
-function drawFloats(ctx: CanvasRenderingContext2D, w: World, cell: number): void {
-  if (!w.floats.length) return;
-  ctx.save();
-  ctx.font = `700 ${Math.max(11, Math.round(cell * 0.58))}px Unbounded, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.shadowColor = "rgba(0,0,0,0.45)";
-  ctx.shadowBlur = 6;
+  /* ---------- floating score text ---------- */
   for (const f of w.floats) {
-    const k = clamp01(f.age / f.max);
+    const k = Math.min(1, f.age / f.max);
     ctx.globalAlpha = 1 - k * k;
-    ctx.fillStyle = "#ffd08a";
-    ctx.fillText(f.text, f.x, f.y - k * cell * 1.2);
+    ctx.fillStyle = th.mint;
+    ctx.font = `700 ${Math.round(cell * 0.62)}px "Space Grotesk", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const rise = reduced ? 0 : k * cell * 1.3;
+    ctx.fillText(f.text, cx({ x: f.x, y: f.y }), cy({ x: f.x, y: f.y }) - rise);
   }
-  ctx.restore();
-}
+  ctx.globalAlpha = 1;
+
+  /* vignette */
+  const v = ctx.createRadialGradient(S / 2, S / 2, S * 0.38, S / 2, S / 2, S * 0.74);
+  v.addColorStop(0, "rgba(0,0,0,0)");
+  v.addColorStop(1, th.shade);
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, S, S);
+
+  if (w.flash > 0) {
+    ctx.fillStyle = `rgba(242,90,80,${(0.28 * (w.flash / 220)).toFixed(3)})`;
+    ctx.fillRect(0, 0, S, S);
+  }
+};
