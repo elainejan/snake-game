@@ -266,12 +266,14 @@ export function useSnakeGame(soundRef: RefObject<SoundFX | null>) {
 
     const resize = () => {
       const rect = wrap.getBoundingClientRect();
-      const size = Math.max(120, Math.floor(Math.min(rect.width, rect.height)));
+      // frame chrome: 10px padding each side + 1px border each side
+      const size = Math.max(120, Math.floor(Math.min(rect.width, rect.height) - 22));
       const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
       canvas.width = Math.round(size * dpr);
       canvas.height = Math.round(size * dpr);
       canvas.style.width = `${size}px`;
       canvas.style.height = `${size}px`;
+      wrap.style.setProperty("--frame-size", `${size + 22}px`);
       world.current.size = size;
       world.current.dpr = dpr;
     };

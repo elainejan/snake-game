@@ -20,6 +20,12 @@
   --glow-1: rgba(111, 227, 165, 0.08);
   --glow-2: rgba(242, 200, 111, 0.05);
   --shadow-board: 0 30px 70px -24px rgba(0, 0, 0, 0.65), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --frame: #0d1912;
+  --board-bg: #101d16;
+  --board-shade: rgba(0, 0, 0, 0.16);
+  --mint-deep: #2e8f60;
+  --mint-glow: rgba(111, 227, 165, 0.2);
+  --apple-glow: rgba(255, 122, 92, 0.22);
 }
 
 [data-theme="light"] {
@@ -37,10 +43,16 @@
   --mint-ink: #f2fbf5;
   --gold: #9a7418;
   --coral: #d9502f;
-  --grid-line: rgba(23, 68, 44, 0.055);
+  --grid-line: rgba(23, 68, 44, 0.07);
   --glow-1: rgba(23, 164, 99, 0.1);
   --glow-2: rgba(154, 116, 24, 0.07);
   --shadow-board: 0 30px 60px -28px rgba(20, 50, 34, 0.4), 0 8px 24px -14px rgba(20, 50, 34, 0.3);
+  --frame: #c9d9c8;
+  --board-bg: #fcfefb;
+  --board-shade: rgba(23, 60, 40, 0.08);
+  --mint-deep: #0a6b3d;
+  --mint-glow: rgba(15, 144, 82, 0.2);
+  --apple-glow: rgba(217, 80, 47, 0.2);
 }
 
 @theme inline {
@@ -163,6 +175,88 @@ body {
   font-weight: 600;
   letter-spacing: 0.04em;
 }
+
+/* ---------- Overlays (rendered over the board) ---------- */
+.ov-scrim { background: rgba(5, 11, 8, 0.78); }
+.ov-card {
+  background: #0f1d15;
+  border: 1px solid rgba(148, 226, 179, 0.16);
+  color: #e9f5ee;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+}
+.ov-mute { color: #8fae9c; }
+.ov-dim { color: #6d8b7b; }
+.ov-mint { color: #6fe3a5; }
+.ov-gold { color: #f2c86f; }
+.ov-badge {
+  border: 1px solid rgba(148, 226, 179, 0.25);
+  background: rgba(148, 226, 179, 0.08);
+  color: #6fe3a5;
+}
+.ov-chip {
+  border: 1px solid rgba(148, 226, 179, 0.18);
+  background: rgba(148, 226, 179, 0.06);
+}
+.ov-chip strong { color: #e9f5ee; }
+.ov-ghost {
+  border: 1px solid rgba(148, 226, 179, 0.28);
+  color: #bfe8d2;
+}
+.ov-ghost:hover {
+  border-color: rgba(148, 226, 179, 0.5);
+  background: rgba(148, 226, 179, 0.08);
+}
+.ov-pill-gold {
+  border: 1px solid rgba(242, 200, 111, 0.5);
+  background: rgba(242, 200, 111, 0.12);
+  color: #f2c86f;
+}
+
+[data-theme="light"] .ov-scrim { background: rgba(240, 245, 239, 0.8); }
+[data-theme="light"] .ov-card {
+  background: #fdfefc;
+  border-color: rgba(23, 68, 44, 0.16);
+  color: #14281d;
+  box-shadow: 0 30px 80px -24px rgba(20, 50, 34, 0.45);
+}
+[data-theme="light"] .ov-mute { color: #5b7263; }
+[data-theme="light"] .ov-dim { color: #74897b; }
+[data-theme="light"] .ov-mint { color: #0f9052; }
+[data-theme="light"] .ov-gold { color: #8f6c14; }
+[data-theme="light"] .ov-badge {
+  border-color: rgba(23, 68, 44, 0.25);
+  background: rgba(23, 68, 44, 0.06);
+  color: #0f9052;
+}
+[data-theme="light"] .ov-chip {
+  border-color: rgba(23, 68, 44, 0.16);
+  background: rgba(23, 68, 44, 0.05);
+}
+[data-theme="light"] .ov-chip strong { color: #14281d; }
+[data-theme="light"] .ov-ghost {
+  border-color: rgba(23, 68, 44, 0.3);
+  color: #33563f;
+}
+[data-theme="light"] .ov-ghost:hover {
+  border-color: rgba(23, 68, 44, 0.5);
+  background: rgba(23, 68, 44, 0.06);
+}
+[data-theme="light"] .ov-pill-gold {
+  border-color: rgba(154, 116, 24, 0.5);
+  background: rgba(154, 116, 24, 0.12);
+  color: #8f6c14;
+}
+
+/* Overlay difficulty picker (dark surface inside overlays) */
+.pkc { border-color: rgba(148, 226, 179, 0.16); background: rgba(148, 226, 179, 0.05); }
+.pkb { color: #8fae9c; }
+.pkb:hover { background: rgba(148, 226, 179, 0.07); color: #e9f5ee; }
+.pk-dot { background: #2c4536; }
+
+[data-theme="light"] .pkc { border-color: rgba(23, 68, 44, 0.16); background: rgba(23, 68, 44, 0.05); }
+[data-theme="light"] .pkb { color: #5b7263; }
+[data-theme="light"] .pkb:hover { background: rgba(23, 68, 44, 0.06); color: #14281d; }
+[data-theme="light"] .pk-dot { background: rgba(23, 68, 44, 0.28); }
 
 /* ---------- Motion ---------- */
 @keyframes rise-in {

@@ -157,12 +157,15 @@ export default function App() {
   };
 
   return (
-    <div data-theme={theme} className="relative min-h-screen overflow-x-hidden bg-page text-ink">
+    <div
+      data-theme={theme}
+      className="relative min-h-dvh overflow-x-hidden bg-page text-ink lg:h-dvh lg:overflow-hidden"
+    >
       <Backdrop />
 
-      <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-12 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pb-10 sm:px-6 lg:h-dvh lg:min-h-0 lg:max-w-[1200px] lg:px-8 lg:py-4 lg:pb-4">
         {/* header */}
-        <header className="anim-rise flex items-center justify-between py-5 sm:py-7">
+        <header className="anim-rise flex items-center justify-between py-5 sm:py-7 lg:py-0 lg:pb-3">
           <div className="group-logo flex items-center gap-3">
             <SnakeMark size={40} className="logo-mark shrink-0" />
             <div>
@@ -198,55 +201,62 @@ export default function App() {
         </header>
 
         {/* main */}
-        <main className="grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
-          <aside className="hidden lg:sticky lg:top-6 lg:block" aria-label="Game information">
+        <main className="flex min-h-0 flex-1 flex-col gap-6 lg:min-h-0 lg:flex-row lg:gap-7">
+          <aside
+            className="hidden lg:block lg:min-h-0 lg:w-[300px] lg:shrink-0 lg:self-stretch lg:overflow-y-auto"
+            aria-label="Game information"
+          >
             <SidePanel ui={ui} onDifficulty={game.setDifficulty} />
           </aside>
 
-          <section className="anim-rise" style={{ animationDelay: "90ms" }} aria-label="Game board">
-            <div className="mx-auto w-full max-w-[620px]">
+          <section className="flex min-h-0 flex-col lg:min-h-0 lg:flex-1" aria-label="Game board">
+            <div className="mx-auto flex w-full max-w-[620px] flex-col lg:min-h-0 lg:max-w-none lg:flex-1">
               <HudBar ui={ui} onTogglePause={togglePauseHud} onRestart={game.start} />
 
-              <div
-                className="rounded-[24px] border border-line bg-panel p-2 sm:p-2.5"
-                style={{ boxShadow: "var(--shadow-board)" }}
-              >
+              <div className="anim-rise lg:min-h-0 lg:flex-1" style={{ animationDelay: "90ms" }}>
                 <div
                   ref={game.wrapRef}
                   onTouchStart={onTouchStart}
                   onTouchMove={onTouchMove}
-                  className="relative aspect-square w-full touch-none overflow-hidden rounded-[18px]"
+                  className="relative aspect-square w-full touch-none lg:flex lg:aspect-auto lg:h-full lg:w-full lg:items-center lg:justify-center"
                 >
-                  <canvas ref={game.canvasRef} className="absolute inset-0" />
+                  <div
+                    className="h-full w-full rounded-[24px] border border-line bg-[var(--frame)] p-[10px] lg:h-[var(--frame-size,340px)] lg:w-[var(--frame-size,340px)]"
+                    style={{ boxShadow: "var(--shadow-board)" }}
+                  >
+                    <div className="relative h-full w-full overflow-hidden rounded-[16px]">
+                      <canvas ref={game.canvasRef} className="absolute inset-0" />
 
-                  {ui.phase === "ready" && (
-                    <ReadyOverlay
-                      difficulty={ui.difficulty}
-                      bests={ui.bests}
-                      onDifficulty={game.setDifficulty}
-                      onStart={game.start}
-                    />
-                  )}
-                  {ui.phase === "paused" && (
-                    <PauseOverlay onResume={game.resume} onRestart={game.start} />
-                  )}
-                  {ui.phase === "over" && (
-                    <OverOverlay
-                      score={ui.score}
-                      best={ui.best}
-                      newBest={ui.newBest}
-                      length={ui.length}
-                      foods={ui.foods}
-                      onAgain={game.start}
-                      onMenu={game.toReady}
-                    />
-                  )}
+                      {ui.phase === "ready" && (
+                        <ReadyOverlay
+                          difficulty={ui.difficulty}
+                          bests={ui.bests}
+                          onDifficulty={game.setDifficulty}
+                          onStart={game.start}
+                        />
+                      )}
+                      {ui.phase === "paused" && (
+                        <PauseOverlay onResume={game.resume} onRestart={game.start} />
+                      )}
+                      {ui.phase === "over" && (
+                        <OverOverlay
+                          score={ui.score}
+                          best={ui.best}
+                          newBest={ui.newBest}
+                          length={ui.length}
+                          foods={ui.foods}
+                          onAgain={game.start}
+                          onMenu={game.toReady}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* desktop caption */}
-              <div className="mt-3 hidden items-center justify-between text-[11px] font-medium tracking-wide text-mute lg:flex">
-                <span>Space — pause · R — restart · Enter — start</span>
+              <div className="mt-2.5 hidden items-center justify-between text-[11px] font-medium tracking-wide text-mute lg:flex">
+                <span>Arrows / WASD steer · Space — pause · R — restart · Enter — start</span>
                 <span>
                   Speed climbs as you eat{" "}
                   <span className="font-display font-bold text-mint">×{ui.speed.toFixed(2)}</span>
@@ -270,7 +280,7 @@ export default function App() {
         </main>
 
         {/* footer */}
-        <footer className="mt-12 border-t border-line pt-5 text-center text-[11px] leading-relaxed text-mute">
+        <footer className="mt-8 border-t border-line pt-4 text-center text-[11px] leading-relaxed text-mute lg:hidden">
           <p>
             Steer with arrow keys, WASD, the pad or a swipe · Space pauses · R restarts.
           </p>
