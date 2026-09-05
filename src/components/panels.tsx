@@ -218,16 +218,18 @@ export function HudBar({
 
 /* ---------------- side panel ---------------- */
 
-function StatRow({ k, v, accent }: { k: string; v: ReactNode; accent?: boolean }) {
+function MiniStat({ k, v, accent }: { k: string; v: ReactNode; accent?: boolean }) {
   return (
-    <li className="flex items-center justify-between py-2">
-      <span className="text-[13px] text-mute">{k}</span>
+    <div className="bg-panel px-3 py-2">
+      <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-mute">{k}</span>
       <span
-        className={`font-display text-[13px] font-bold ${accent ? "text-mint" : "text-ink"}`}
+        className={`font-display mt-0.5 block text-sm font-bold leading-none ${
+          accent ? "text-mint" : "text-ink"
+        }`}
       >
         {v}
       </span>
-    </li>
+    </div>
   );
 }
 
@@ -246,26 +248,29 @@ export function SidePanel({
     ui.best > 0 ? Math.min(100, Math.round((ui.score / ui.best) * 100)) : ui.score > 0 ? 100 : 0;
 
   return (
-    <div className="space-y-4">
-      {/* live score */}
-      <section className="panel anim-rise p-5" aria-label="Current score">
-        <span className={xsLabel}>Score</span>
-        <p
-          key={ui.score}
-          className="anim-score font-display mt-2 text-[46px] font-extrabold leading-none text-ink"
-        >
-          {pad3(ui.score)}
-        </p>
-        <div className="mt-4">
-          <div className="mb-1.5 flex items-center justify-between text-[11px] text-mute">
-            <span>
-              Best · {DIFFS[ui.difficulty].label}
-            </span>
-            <span className="flex items-center gap-1 font-bold text-gold">
-              <IconTrophy size={12} />
-              {pad3(ui.best)}
-            </span>
+    <div className="space-y-3.5">
+      {/* live score + session stats */}
+      <section className="panel anim-rise p-4" aria-label="Current score and session statistics">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span className={xsLabel}>Score</span>
+            <p
+              key={ui.score}
+              className="anim-score font-display mt-1.5 text-[40px] font-extrabold leading-none text-ink"
+            >
+              {pad3(ui.score)}
+            </p>
           </div>
+          <div className="text-right">
+            <span className={xsLabel}>Best</span>
+            <p className="font-display mt-1.5 flex items-center justify-end gap-1.5 text-[22px] font-bold leading-none text-gold">
+              <IconTrophy size={15} />
+              {pad3(ui.best)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3.5">
           <div
             className="h-1.5 overflow-hidden rounded-full bg-panel2"
             role="progressbar"
@@ -290,21 +295,35 @@ export function SidePanel({
                 : "First run on this mode — set the bar."}
           </p>
         </div>
+
+        <div
+          className="mt-3.5 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line"
+          aria-label="Session statistics"
+        >
+          <MiniStat k="Length" v={ui.length} accent />
+          <MiniStat k="Food" v={ui.foods} />
+          <MiniStat k="Speed" v={`×${ui.speed.toFixed(2)}`} />
+          <MiniStat k="Games" v={ui.gamesPlayed} />
+        </div>
       </section>
 
       {/* difficulty + per-mode bests */}
-      <section className="panel anim-rise p-5" style={{ animationDelay: "70ms" }} aria-label="Difficulty">
+      <section
+        className="panel anim-rise p-4"
+        style={{ animationDelay: "70ms" }}
+        aria-label="Difficulty"
+      >
         <span className={xsLabel}>Difficulty</span>
         <div className="mt-2.5">
           <DifficultyPicker value={ui.difficulty} onChange={onDifficulty} />
         </div>
-        <ul className="mt-4 space-y-1.5">
+        <ul className="mt-3 space-y-1">
           {DIFF_ORDER.map((d) => {
             const active = d === ui.difficulty;
             return (
               <li
                 key={d}
-                className={`flex items-center justify-between rounded-[10px] border px-3 py-2 transition-colors ${
+                className={`flex items-center justify-between rounded-[10px] border px-3 py-1.5 transition-colors ${
                   active
                     ? "border-linestrong bg-panel2 text-ink"
                     : "border-transparent text-mute"
@@ -328,24 +347,17 @@ export function SidePanel({
             );
           })}
         </ul>
-        <p className="mt-3 text-[11px] leading-snug text-mute">
+        <p className="mt-2.5 text-[11px] leading-snug text-mute">
           Changing mode ends the current run. Bests save per mode, in this browser.
         </p>
       </section>
 
-      {/* session stats */}
-      <section className="panel anim-rise p-5" style={{ animationDelay: "140ms" }} aria-label="Session statistics">
-        <span className={xsLabel}>Session</span>
-        <ul className="mt-1.5 divide-y divide-line">
-          <StatRow k="Snake length" v={ui.length} accent />
-          <StatRow k="Food eaten" v={ui.foods} />
-          <StatRow k="Speed" v={`×${ui.speed.toFixed(2)}`} />
-          <StatRow k="Games played" v={ui.gamesPlayed} />
-        </ul>
-      </section>
-
-      {/* controls */}
-      <section className="panel anim-rise p-5" style={{ animationDelay: "210ms" }} aria-label="Keyboard controls">
+      {/* controls — mobile only; desktop shows a caption under the board */}
+      <section
+        className="panel anim-rise p-4 lg:hidden"
+        style={{ animationDelay: "140ms" }}
+        aria-label="Keyboard controls"
+      >
         <span className={xsLabel}>Controls</span>
         <ul className="mt-2 space-y-2.5 text-[13px] text-mute">
           <li className="flex items-center justify-between gap-2">
