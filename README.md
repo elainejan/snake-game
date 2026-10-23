@@ -55,7 +55,3 @@ Visit the live demo: **[https://e4badf95-cf9c-48af-a270-a1f812c7620d.preview.qwe
 - [ ] Add achievements and challenges.
 - [ ] Improve mobile responsiveness.
 - [ ] Add a global leaderboard.
-
-## 📄 License
-
-This project is open source. Add a license file if you want others to use, modify, and distribute your code under specified terms.
