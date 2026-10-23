@@ -40,7 +40,7 @@ Swipe controls are also available on supported touch devices.
 
 ### Play Online
 
-Visit the live demo: **[Add your deployed game URL here]**
+Visit the live demo: **[https://e4badf95-cf9c-48af-a270-a1f812c7620d.preview.qwenlm.io/]**
 
 ## 🛠️ Built With
 
