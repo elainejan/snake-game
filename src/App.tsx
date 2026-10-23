@@ -165,14 +165,15 @@ export default function App() {
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-4 pb-10 sm:px-6 lg:h-dvh lg:min-h-0 lg:max-w-[1200px] lg:px-8 lg:py-4 lg:pb-4">
         {/* header */}
-        <header className="anim-rise flex items-center justify-between py-5 sm:py-7 lg:py-0 lg:pb-3">
-          <div className="group-logo flex items-center gap-3">
-            <SnakeMark size={40} className="logo-mark shrink-0" />
+        <header className="anim-rise flex items-center justify-between py-4 sm:py-5 lg:py-0 lg:pb-3">
+          <div className="group-logo flex items-center gap-2.5 sm:gap-3">
+            <SnakeMark size={36} className="logo-mark shrink-0 sm:hidden" />
+            <SnakeMark size={40} className="logo-mark hidden shrink-0 sm:block" />
             <div>
-              <p className="font-display text-lg font-extrabold leading-none tracking-[0.2em] text-ink">
+              <p className="font-display text-base font-extrabold leading-none tracking-[0.2em] text-ink sm:text-lg">
                 SNAKE
               </p>
-              <p className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-mute">
+              <p className="mt-1 hidden text-[10px] font-semibold uppercase tracking-[0.28em] text-mute sm:block">
                 A modern classic
               </p>
             </div>
@@ -264,12 +265,12 @@ export default function App() {
               </div>
 
               {/* mobile controls */}
-              <div className="mt-6 lg:hidden">
+              <div className="mt-4 lg:hidden">
                 <Dpad phase={ui.phase} onDir={game.input} onCenter={game.primaryAction} />
-                <p className="mt-3 text-center text-[11px] text-mute">
+                <p className="mt-2.5 text-center text-[11px] text-mute">
                   or swipe directly on the board
                 </p>
-                <p className="mt-1.5 text-center text-[11px] text-mute">
+                <p className="mt-1 text-center text-[11px] text-mute">
                   Length <strong className="text-ink">{ui.length}</strong> · Food{" "}
                   <strong className="text-ink">{ui.foods}</strong> · Games{" "}
                   <strong className="text-ink">{ui.gamesPlayed}</strong>

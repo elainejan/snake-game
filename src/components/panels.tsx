@@ -93,7 +93,7 @@ export function DifficultyPicker({
             aria-label={`${DIFFS[d].label} difficulty`}
             onClick={() => onChange(d)}
             className={[
-              "flex cursor-pointer flex-col items-center gap-1 rounded-[10px] px-2 py-2.5 transition-all duration-150",
+              "flex cursor-pointer flex-col items-center gap-0.5 rounded-[10px] px-2 py-2 transition-all duration-150 sm:gap-1 sm:py-2.5",
               active
                 ? "bg-mint text-mintink shadow-md shadow-black/15"
                 : dark
@@ -127,7 +127,7 @@ const PHASE_META: Record<
 
 function Chip({ children }: { children: ReactNode }) {
   return (
-    <span className="flex h-9 items-center gap-1.5 rounded-[10px] border border-line bg-panel px-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-mute">
+    <span className="flex h-8 items-center gap-1 rounded-[9px] border border-line bg-panel px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-mute sm:h-9 sm:gap-1.5 sm:px-2.5">
       {children}
     </span>
   );
@@ -146,10 +146,10 @@ export function HudBar({
   const pausable = ui.phase === "playing" || ui.phase === "paused";
 
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-2">
-      <span className="mr-1 flex items-center gap-2">
+    <div className="mb-2.5 flex flex-wrap items-center gap-1.5 sm:mb-3 sm:gap-2">
+      <span className="mr-1 flex items-center gap-1.5 sm:gap-2">
         <span
-          className={`h-2 w-2 rounded-full ${meta.pulse ? "anim-dot" : ""}`}
+          className={`h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2 ${meta.pulse ? "anim-dot" : ""}`}
           style={
             {
               backgroundColor: meta.dot,
@@ -157,25 +157,26 @@ export function HudBar({
             } as CSSProperties
           }
         />
-        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-mute">
+        <span className="hidden text-[11px] font-bold uppercase tracking-[0.18em] text-mute sm:block">
           {meta.label}
         </span>
       </span>
 
-      <div className="flex flex-1 flex-wrap items-center gap-2">
+      <div className="flex flex-1 flex-wrap items-center gap-1.5 sm:gap-2">
         <Chip>
-          Score
+          <span className="hidden sm:inline">Score</span>
           <span
             key={ui.score}
-            className="anim-score font-display text-[13px] font-bold tracking-normal text-ink normal-case"
+            className="anim-score font-display text-[12px] font-bold tracking-normal text-ink normal-case sm:text-[13px]"
           >
             {pad3(ui.score)}
           </span>
         </Chip>
         <Chip>
-          <IconTrophy size={13} className="text-gold" />
-          Best
-          <span className="font-display text-[13px] font-bold tracking-normal text-ink normal-case">
+          <IconTrophy size={12} className="text-gold sm:hidden" />
+          <IconTrophy size={13} className="hidden text-gold sm:block" />
+          <span className="hidden sm:inline">Best</span>
+          <span className="font-display text-[12px] font-bold tracking-normal text-ink normal-case sm:text-[13px]">
             {pad3(ui.best)}
           </span>
         </Chip>
@@ -191,7 +192,7 @@ export function HudBar({
         </Chip>
       </div>
 
-      <span className="flex items-center gap-2">
+      <span className="flex items-center gap-1.5 sm:gap-2">
         <button
           type="button"
           className="icon-btn"
@@ -200,7 +201,7 @@ export function HudBar({
           aria-label={ui.phase === "paused" ? "Resume game" : "Pause game"}
           title={ui.phase === "paused" ? "Resume (Space)" : "Pause (Space)"}
         >
-          {ui.phase === "paused" ? <IconPlay size={16} /> : <IconPause size={16} />}
+          {ui.phase === "paused" ? <IconPlay size={15} /> : <IconPause size={15} />}
         </button>
         <button
           type="button"
@@ -209,7 +210,7 @@ export function HudBar({
           aria-label="Restart game"
           title="Restart (R)"
         >
-          <IconRestart size={16} />
+          <IconRestart size={15} />
         </button>
       </span>
     </div>

@@ -40,7 +40,7 @@ function PadButton({
       title={label}
       onPointerDown={handle}
       className={[
-        "flex h-16 w-16 items-center justify-center rounded-2xl border transition-all duration-100 select-none touch-none",
+        "flex h-14 w-14 items-center justify-center rounded-2xl border transition-all duration-100 select-none touch-none sm:h-16 sm:w-16",
         "active:scale-90",
         primary
           ? "border-transparent bg-mint text-mintink shadow-lg shadow-black/20"
@@ -65,35 +65,48 @@ export function Dpad({ phase, onDir, onCenter }: DpadProps) {
 
   return (
     <div
-      className="mx-auto grid w-max select-none grid-cols-3 gap-2.5"
+      className="mx-auto grid w-max select-none grid-cols-3 gap-2 sm:gap-2.5"
       role="group"
       aria-label="On-screen game controls"
     >
       <div />
       <PadButton label="Move up" onPress={() => onDir("up")}>
-        <IconUp size={22} />
+        <IconUp size={20} className="sm:hidden" />
+        <IconUp size={22} className="hidden sm:block" />
       </PadButton>
       <div />
 
       <PadButton label="Move left" onPress={() => onDir("left")}>
-        <IconLeft size={22} />
+        <IconLeft size={20} className="sm:hidden" />
+        <IconLeft size={22} className="hidden sm:block" />
       </PadButton>
       <PadButton label={centerLabel} onPress={onCenter} primary>
         {phase === "playing" ? (
-          <IconPause size={22} />
+          <>
+            <IconPause size={20} className="sm:hidden" />
+            <IconPause size={22} className="hidden sm:block" />
+          </>
         ) : phase === "over" ? (
-          <IconRestart size={21} />
+          <>
+            <IconRestart size={19} className="sm:hidden" />
+            <IconRestart size={21} className="hidden sm:block" />
+          </>
         ) : (
-          <IconPlay size={22} />
+          <>
+            <IconPlay size={20} className="sm:hidden" />
+            <IconPlay size={22} className="hidden sm:block" />
+          </>
         )}
       </PadButton>
       <PadButton label="Move right" onPress={() => onDir("right")}>
-        <IconRight size={22} />
+        <IconRight size={20} className="sm:hidden" />
+        <IconRight size={22} className="hidden sm:block" />
       </PadButton>
 
       <div />
       <PadButton label="Move down" onPress={() => onDir("down")}>
-        <IconDown size={22} />
+        <IconDown size={20} className="sm:hidden" />
+        <IconDown size={22} className="hidden sm:block" />
       </PadButton>
       <div />
     </div>
